@@ -81,6 +81,7 @@ public class SimpleStore : MonoBehaviour
         var newBalance = await web3.Eth.GetBalance.SendRequestAsync(from);
         ethBalance = newBalance;
         decimal ethBalanceVal = Web3.Convert.FromWei(ethBalance.Value);
+        Debug.LogFormat("Balance: {0}", ethBalanceVal);
     }
 
     void GetContract()
