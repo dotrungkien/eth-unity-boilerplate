@@ -68,21 +68,23 @@ public class SimpleStore : MonoBehaviour
         account = new Account(privateKey);
         from = account.Address;
         web3 = new Web3(account, url);
-        StartCoroutine(BalanceInterval());
+        StartCoroutine(StatusInterval());
         GetContract();
     }
 
-    IEnumerator BalanceInterval()
+    IEnumerator StatusInterval()
     {
         while (true)
         {
-            UpdateBalance();
+            UpdateStatus();
             yield return new WaitForSeconds(1f);
         }
     }
 
-    public async Task UpdateBalance()
+    public async Task UpdateStatus()
     {
+        uint newValFromContract = await GetValue();
+        currentValueText.text = "" + newValFromContract;
         var newBalance = await web3.Eth.GetBalance.SendRequestAsync(from);
         ethBalance = newBalance;
         decimal ethBalanceVal = Web3.Convert.FromWei(ethBalance.Value);
@@ -90,16 +92,13 @@ public class SimpleStore : MonoBehaviour
         balanceText.text = string.Format("{0:0.00} ETH", ethBalanceVal);
     }
 
-    public async Task OnSetValue()
+    public void OnSetValue()
     {
         var newValue = inputValue.text;
         try
         {
             int intValue = Int32.Parse(newValue);
-            await SetValue(intValue);
-            int newValFromContract = await GetValue();
-            currentValueText.text = "" + newValFromContract;
-
+            SetValue(intValue);
         }
         catch (FormatException)
         {
@@ -113,19 +112,19 @@ public class SimpleStore : MonoBehaviour
         string address = contractAddress.ToString();
         contract = web3.Eth.GetContract(abi, address);
 
-        getFunction = contract.GetFunction("set");
-        setFunction = contract.GetFunction("get");
+        getFunction = contract.GetFunction("get");
+        setFunction = contract.GetFunction("set");
     }
 
-    public async Task<int> GetValue()
+    public async Task<uint> GetValue()
     {
-        var value = await getFunction.CallAsync<int>(from);
+        var value = await getFunction.CallAsync<uint>();
         return value;
     }
 
     public async Task<string> SetValue(int value)
     {
-        var receipt = await setFunction.SendTransactionAndWaitForReceiptAsync(from, gas, null, null, value);
+        var receipt = await setFunction.SendTransactionAndWaitForReceiptAsync(from, gas, new HexBigInteger(0), null, value);
         Debug.LogFormat("tx: {0}", receipt.TransactionHash);
         return receipt.TransactionHash;
     }
