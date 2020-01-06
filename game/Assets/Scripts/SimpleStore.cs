@@ -90,6 +90,23 @@ public class SimpleStore : MonoBehaviour
         balanceText.text = string.Format("{0:0.00} ETH", ethBalanceVal);
     }
 
+    public async Task OnSetValue()
+    {
+        var newValue = inputValue.text;
+        try
+        {
+            int intValue = Int32.Parse(newValue);
+            await SetValue(intValue);
+            int newValFromContract = await GetValue();
+            currentValueText.text = "" + newValFromContract;
+
+        }
+        catch (FormatException)
+        {
+            Debug.LogError("Unable to parse input!");
+        }
+    }
+
     void GetContract()
     {
         string abi = contractABI.ToString();
@@ -100,16 +117,16 @@ public class SimpleStore : MonoBehaviour
         setFunction = contract.GetFunction("get");
     }
 
-    public async Task<bool> GetValue()
+    public async Task<int> GetValue()
     {
-        var value = await getFunction.CallAsync<bool>(from);
+        var value = await getFunction.CallAsync<int>(from);
         return value;
     }
 
     public async Task<string> SetValue(int value)
     {
         var receipt = await setFunction.SendTransactionAndWaitForReceiptAsync(from, gas, null, null, value);
-        Debug.LogFormat(" tx: {0}", receipt.TransactionHash);
+        Debug.LogFormat("tx: {0}", receipt.TransactionHash);
         return receipt.TransactionHash;
     }
 }
