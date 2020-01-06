@@ -21,6 +21,11 @@ public class SimpleStore : MonoBehaviour
     public TextAsset contractABI;
     public TextAsset contractAddress;
 
+    public Text currentValueText;
+    public Text addressText;
+    public Text balanceText;
+    public InputField inputValue;
+
     private HexBigInteger ethBalance;
     private Web3 web3;
     private Account account;
@@ -81,7 +86,8 @@ public class SimpleStore : MonoBehaviour
         var newBalance = await web3.Eth.GetBalance.SendRequestAsync(from);
         ethBalance = newBalance;
         decimal ethBalanceVal = Web3.Convert.FromWei(ethBalance.Value);
-        Debug.LogFormat("Balance: {0}", ethBalanceVal);
+        addressText.text = from;
+        balanceText.text = string.Format("{0:0.00} ETH", ethBalanceVal);
     }
 
     void GetContract()
